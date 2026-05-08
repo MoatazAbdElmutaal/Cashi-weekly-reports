@@ -104,7 +104,17 @@
                 <div class="stat-box bg-yellow"><small>التجار</small><b id="outPMerchants">0</b></div>
             </div>
         </div>
-        <div class="footer">تم التوليد آلياً بواسطة نظام تقارير المندوبين</div>
+        <div class="footer" id="mainFooter">
+    <div class="show-on-web">
+        تم التطوير بواسطة <b>معتز عبدالمتعال</b>
+    </div>
+
+    <div class="show-on-image" style="display: none; font-size: 0.7em; color: #7f8c8d; line-height: 1.4;">
+        This analysis dashboard has been made through <br>
+        <span style="color: #1b5e20; font-weight: bold;">https://moatazabdelmutaal.github.io/Cashi-weekly-reports/</span>
+    </div>
+        </div>
+        
     </div>
 </div>
 
@@ -138,20 +148,46 @@ function generateReport() {
 
 async function shareReport() {
     const report = document.getElementById('weeklyReport');
-    const canvas = await html2canvas(report, { scale: 3, useCORS: true });
     
+    // تحديد عناصر الفوتر
+    const webFooter = document.querySelector('.show-on-web');
+    const imgFooter = document.querySelector('.show-on-image');
+
+    // 1. تبديل المحتوى قبل اللقطة
+    webFooter.style.display = 'none';
+    imgFooter.style.display = 'block';
+
+    // 2. تصوير التقرير بجودة عالية
+    const canvas = await html2canvas(report, { 
+        scale: 3, 
+        useCORS: true,
+        backgroundColor: "#ffffff" // لضمان خلفية بيضاء نقية في الصورة
+    });
+
+    // 3. إعادة المحتوى لأصله فوراً في الموقع
+    webFooter.style.display = 'block';
+    imgFooter.style.display = 'none';
+
+    // 4. تنفيذ عملية المشاركة الرسمية
     canvas.toBlob(async (blob) => {
-        const file = new File([blob], 'Report.png', { type: 'image/png' });
+        const file = new File([blob], 'Cashi-Weekly-Report.png', { type: 'image/png' });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: 'تقرير أداء كاشي' });
+            try {
+                await navigator.share({
+                    files: [file],
+                    title: 'تقرير أداء كاشي - معتز',
+                });
+            } catch (err) { console.log("User cancelled or error: ", err); }
         } else {
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'Report.png';
-            a.click();
+            // تحميل يدوي في حال عدم دعم المشاركة
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'Weekly-Report.png';
+            link.click();
         }
     }, 'image/png');
 }
+
 </script>
 </body>
 </html>
