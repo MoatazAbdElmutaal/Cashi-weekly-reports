@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kashi Report - Share Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --kashi-green: #1b5e20;
+            --light-green: #e8f5e9;
+            --danger-soft: #fbe9e7;
+            --purchase-bg: #fffdf2;
+            --purchase-border: #f1c40f;
+            --text-dark: #2c3e50;
+        }
+        body { font-family: 'Cairo', sans-serif; background: #f4f7f6; padding: 10px; }
+        .container { max-width: 480px; margin: auto; background: #fff; padding: 15px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        
+        .input-row { display: flex; gap: 5px; margin-bottom: 8px; }
+        input { font-family: 'Cairo', sans-serif; width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.85em; }
+        
+        button { font-family: 'Cairo', sans-serif; width: 100%; padding: 12px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; color: white; margin-top: 8px; transition: 0.3s; }
+        .btn-generate { background: var(--kashi-green); }
+        .btn-share { background: #2980b9; display: none; } /* يظهر بعد التوليد */
+
+        #weeklyReport { margin-top: 20px; display: none; background: #fff; border-radius: 20px; border: 1px solid #eee; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .header { border-bottom: 4px solid var(--kashi-green); padding: 15px; text-align: center; background: white; }
+        .header h1 { margin: 0; font-size: 1.4em; color: var(--kashi-green); }
+        
+        .info-bar { display: flex; justify-content: space-around; background: #fafafa; padding: 8px; font-size: 0.8em; font-weight: bold; border-bottom: 1px solid #eee; }
+        .dashboard-body { padding: 15px; background: white; }
+        .card-row { display: flex; align-items: center; justify-content: center; margin-bottom: 12px; gap: 5px; }
+        
+        .stat-box { flex: 1; padding: 10px 2px; border-radius: 10px; text-align: center; border: 1px solid #eee; }
+        .stat-box small { display: block; font-size: 0.65em; font-weight: 700; color: #7f8c8d; margin-bottom: 2px; }
+        .stat-box b { font-size: 0.9em; color: var(--text-dark); }
+        
+        .bg-light { background: #f8f9fa; }
+        .bg-red { background: var(--danger-soft); border-color: #ffccbc; }
+        .bg-green { background: var(--light-green); border-color: #c8e6c9; }
+        .bg-yellow { background: var(--purchase-bg); border-color: var(--purchase-border); }
+        
+        .arrow { font-size: 1em; color: #bdc3c7; font-weight: bold; }
+        .sep-arrow { text-align: center; color: #ddd; margin: -5px 0 5px 0; font-size: 0.8em; }
+        .footer { padding: 10px; font-size: 0.7em; text-align: center; color: #999; background: #f9f9f9; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h3 style="text-align:center; color:var(--kashi-green)">مولد تقارير كاشي الأسبوعية</h3>
+    
+    <div class="input-row">
+        <input type="text" id="name" placeholder="اسم المندوب">
+        <input type="text" id="area" placeholder="المنطقة (مثلاً: الدبة)">
+    </div>
+    <input type="date" id="startDate" onchange="updateDates()" style="width:100%; margin-bottom:8px;">
+    
+    <div class="input-row">
+        <input type="number" id="v_count" placeholder="إجمالي الزيارات">
+        <input type="number" id="v_absent" placeholder="تاجر غير موجود">
+    </div>
+    <div class="input-row">
+        <input type="number" id="f_count" placeholder="عدد التغذيات">
+        <input type="number" id="f_amount" placeholder="مبلغ التغذية">
+    </div>
+    <div class="input-row">
+        <input type="number" id="p_count" placeholder="عدد الشراء">
+        <input type="number" id="p_amount" placeholder="مبلغ الشراء">
+        <input type="number" id="p_merchants" placeholder="من كم تاجر؟">
+    </div>
+
+    <button class="btn-generate" onclick="generateReport()">توليد التقرير الأسبوعي 🚀</button>
+    <button id="shareBtn" class="btn-share" onclick="shareReport()">مشاركة كصورة (WhatsApp/Telegram) 📤</button>
+
+    <div id="weeklyReport">
+        <div class="header">
+            <h1>التقرير الأسبوعي للأداء</h1>
+            <p id="periodText" style="font-size:0.8em; color:#666; margin:5px 0 0 0;">الفترة</p>
+        </div>
+        <div class="info-bar">
+            <span>👤 <span id="outName"></span></span>
+            <span>📍 <span id="outArea"></span></span>
+        </div>
+        <div class="dashboard-body">
+            <div class="card-row">
+                <div class="stat-box bg-light"><small>الزيارات</small><b id="outVCount">0</b></div>
+                <div class="arrow">←</div>
+                <div class="stat-box bg-red"><small style="color:#c62828">غير موجود</small><b id="outVAbsent" style="color:#c62828">0</b></div>
+            </div>
+            <div class="card-row">
+                <div class="stat-box bg-green"><small>عدد التغذيات</small><b id="outFCount">0</b></div>
+                <div class="arrow">→</div>
+                <div class="stat-box bg-green"><small>مبلغ التغذية</small><b id="outFAmount">0</b></div>
+            </div>
+            <div class="sep-arrow">▼</div>
+            <div class="card-row">
+                <div class="stat-box bg-yellow"><small>عدد الشراء</small><b id="outPCount">0</b></div>
+                <div class="arrow">←</div>
+                <div class="stat-box bg-yellow" style="flex:1.4"><small>إجمالي المبلغ</small><b id="outPAmount" style="color:#9c640c">0</b></div>
+                <div class="arrow">→</div>
+                <div class="stat-box bg-yellow"><small>التجار</small><b id="outPMerchants">0</b></div>
+            </div>
+        </div>
+        <div class="footer">تم التوليد آلياً بواسطة نظام تقارير المندوبين</div>
+    </div>
+</div>
+
+<script>
+function updateDates() {
+    const startInput = document.getElementById('startDate').value;
+    if (startInput) {
+        const start = new Date(startInput);
+        const end = new Date(startInput);
+        end.setDate(start.getDate() + 7);
+        const options = { month: 'short', day: 'numeric', year: 'numeric' };
+        document.getElementById('periodText').innerText = `من ${start.toLocaleDateString('ar-EG', options)} إلى ${end.toLocaleDateString('ar-EG', options)}`;
+    }
+}
+
+function generateReport() {
+    document.getElementById('outName').innerText = document.getElementById('name').value || "---";
+    document.getElementById('outArea').innerText = document.getElementById('area').value || "---";
+    document.getElementById('outVCount').innerText = document.getElementById('v_count').value || 0;
+    document.getElementById('outVAbsent').innerText = document.getElementById('v_absent').value || 0;
+    document.getElementById('outFCount').innerText = document.getElementById('f_count').value || 0;
+    document.getElementById('outFAmount').innerText = Number(document.getElementById('f_amount').value).toLocaleString() + " ج";
+    document.getElementById('outPCount').innerText = document.getElementById('p_count').value || 0;
+    document.getElementById('outPAmount').innerText = Number(document.getElementById('p_amount').value).toLocaleString() + " ج";
+    document.getElementById('outPMerchants').innerText = document.getElementById('p_merchants').value || 0;
+
+    document.getElementById('weeklyReport').style.display = 'block';
+    document.getElementById('shareBtn').style.display = 'block';
+    updateDates();
+}
+
+async function shareReport() {
+    const report = document.getElementById('weeklyReport');
+    const canvas = await html2canvas(report, { scale: 3, useCORS: true });
+    
+    canvas.toBlob(async (blob) => {
+        const file = new File([blob], 'Report.png', { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: 'تقرير أداء كاشي' });
+        } else {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'Report.png';
+            a.click();
+        }
+    }, 'image/png');
+}
+</script>
+</body>
+</html>
