@@ -13,6 +13,8 @@
             --danger-soft: #fbe9e7;
             --purchase-bg: #fffdf2;
             --purchase-border: #f1c40f;
+            --points-bg: #f3e5f5;
+            --points-border: #9c27b0;
             --text-dark: #2c3e50;
         }
         body { font-family: 'Cairo', sans-serif; background: #f4f7f6; padding: 10px; }
@@ -41,6 +43,7 @@
         .bg-red { background: var(--danger-soft); border-color: #ffccbc; }
         .bg-green { background: var(--light-green); border-color: #c8e6c9; }
         .bg-yellow { background: var(--purchase-bg); border-color: var(--purchase-border); }
+        .bg-purple { background: var(--points-bg); border-color: var(--points-border); }
         
         .arrow { font-size: 1em; color: #bdc3c7; font-weight: bold; }
         .sep-arrow { text-align: center; color: #ddd; margin: -5px 0 5px 0; font-size: 0.8em; }
@@ -61,7 +64,7 @@
         <input type="text" 
                id="startDate" 
                placeholder="📅 ادخل تاريخ بداية الاسبوع" 
-               onfocus="this.type='date'; try { this.showPicker(); } catch(e) { console.log('Picker error'); }" 
+               onfocus="this.type='date'; try { this.showPicker(); } catch(e) {}" 
                onblur="if(!this.value)this.type='text'"
                onchange="updateDates()"
                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: 'Cairo', sans-serif; height: 45px; box-sizing: border-box;">
@@ -74,6 +77,10 @@
     <div class="input-row">
         <input type="number" id="f_count" placeholder="عدد التغذيات">
         <input type="number" id="f_amount" placeholder="مبلغ التغذية">
+    </div>
+    <div class="input-row">
+        <input type="number" id="pts_new" placeholder="النقاط الجديدة">
+        <input type="number" id="pts_total" placeholder="إجمالي النقاط الحالي">
     </div>
     <div class="input-row">
         <input type="number" id="p_count" placeholder="عدد الشراء">
@@ -104,6 +111,14 @@
                 <div class="arrow">→</div>
                 <div class="stat-box bg-green"><small>مبلغ التغذية</small><b id="outFAmount">0</b></div>
             </div>
+            
+            <div class="sep-arrow">▼</div>
+            <div class="card-row">
+                <div class="stat-box bg-purple"><small style="color:#6a1b9a">النقاط الجديدة</small><b id="outPtsNew" style="color:#6a1b9a">0</b></div>
+                <div class="arrow">→</div>
+                <div class="stat-box bg-purple"><small style="color:#6a1b9a">إجمالي النقاط الحالي</small><b id="outPtsTotal" style="color:#6a1b9a">0</b></div>
+            </div>
+
             <div class="sep-arrow">▼</div>
             <div class="card-row">
                 <div class="stat-box bg-yellow"><small>عدد الشراء</small><b id="outPCount">0</b></div>
@@ -114,9 +129,7 @@
             </div>
         </div>
         <div class="footer" id="mainFooter">
-            <div class="show-on-web">
-                تم التطوير بواسطة <b>معتز عبدالمتعال</b>
-            </div>
+            <div class="show-on-web">تم التطوير بواسطة <b>معتز عبدالمتعال</b></div>
             <div class="show-on-image" style="display: none; font-size: 0.7em; color: #7f8c8d; line-height: 1.4;">
                 This analysis dashboard has been made through <br>
                 <span style="color: #1b5e20; font-weight: bold;">https://moatazabdelmutaal.github.io/Cashi-weekly-reports/</span>
@@ -144,6 +157,11 @@ function generateReport() {
     document.getElementById('outVAbsent').innerText = document.getElementById('v_absent').value || 0;
     document.getElementById('outFCount').innerText = document.getElementById('f_count').value || 0;
     document.getElementById('outFAmount').innerText = Number(document.getElementById('f_amount').value).toLocaleString() + " ج";
+    
+    // ربط الحقول الجديدة
+    document.getElementById('outPtsNew').innerText = document.getElementById('pts_new').value || 0;
+    document.getElementById('outPtsTotal').innerText = document.getElementById('pts_total').value || 0;
+
     document.getElementById('outPCount').innerText = document.getElementById('p_count').value || 0;
     document.getElementById('outPAmount').innerText = Number(document.getElementById('p_amount').value).toLocaleString() + " ج";
     document.getElementById('outPMerchants').innerText = document.getElementById('p_merchants').value || 0;
@@ -157,15 +175,10 @@ async function shareReport() {
     const report = document.getElementById('weeklyReport');
     const webFooter = document.querySelector('.show-on-web');
     const imgFooter = document.querySelector('.show-on-image');
-
     webFooter.style.display = 'none';
     imgFooter.style.display = 'block';
 
-    const canvas = await html2canvas(report, { 
-        scale: 3, 
-        useCORS: true,
-        backgroundColor: "#ffffff"
-    });
+    const canvas = await html2canvas(report, { scale: 3, useCORS: true, backgroundColor: "#ffffff" });
 
     webFooter.style.display = 'block';
     imgFooter.style.display = 'none';
@@ -173,12 +186,7 @@ async function shareReport() {
     canvas.toBlob(async (blob) => {
         const file = new File([blob], 'Cashi-Weekly-Report.png', { type: 'image/png' });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            try {
-                await navigator.share({
-                    files: [file],
-                    title: 'تقرير أداء كاشي - معتز',
-                });
-            } catch (err) { console.log("Share error: ", err); }
+            await navigator.share({ files: [file], title: 'تقرير أداء كاشي - معتز' });
         } else {
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
