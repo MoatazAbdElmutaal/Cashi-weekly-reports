@@ -8,7 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
-            --kashi-green: #1b5e20;
+            --cashi-green: #1b5e20;
             --light-green: #e8f5e9;
             --danger-soft: #fbe9e7;
             --purchase-bg: #fffdf2;
@@ -22,12 +22,12 @@
         input { font-family: 'Cairo', sans-serif; width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.85em; }
         
         button { font-family: 'Cairo', sans-serif; width: 100%; padding: 12px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; color: white; margin-top: 8px; transition: 0.3s; }
-        .btn-generate { background: var(--kashi-green); }
-        .btn-share { background: #2980b9; display: none; } /* يظهر بعد التوليد */
+        .btn-generate { background: var(--cashi-green); }
+        .btn-share { background: #2980b9; display: none; }
 
         #weeklyReport { margin-top: 20px; display: none; background: #fff; border-radius: 20px; border: 1px solid #eee; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .header { border-bottom: 4px solid var(--kashi-green); padding: 15px; text-align: center; background: white; }
-        .header h1 { margin: 0; font-size: 1.4em; color: var(--kashi-green); }
+        .header { border-bottom: 4px solid var(--cashi-green); padding: 15px; text-align: center; background: white; }
+        .header h1 { margin: 0; font-size: 1.4em; color: var(--cashi-green); }
         
         .info-bar { display: flex; justify-content: space-around; background: #fafafa; padding: 8px; font-size: 0.8em; font-weight: bold; border-bottom: 1px solid #eee; }
         .dashboard-body { padding: 15px; background: white; }
@@ -50,13 +50,22 @@
 <body>
 
 <div class="container">
-    <h3 style="text-align:center; color:var(--kashi-green)">مولد تقارير كاشي الأسبوعية</h3>
+    <h3 style="text-align:center; color:var(--cashi-green)">مولد تقارير كاشي الأسبوعية</h3>
     
     <div class="input-row">
         <input type="text" id="name" placeholder="اسم المندوب">
         <input type="text" id="area" placeholder="المنطقة (مثلاً: الدبة)">
     </div>
-    <input type="date" id="startDate" onchange="updateDates()" style="width:100%; margin-bottom:8px;">
+    
+    <div style="position: relative; margin-bottom: 8px;">
+        <input type="text" 
+               id="startDate" 
+               placeholder="📅 ادخل تاريخ بداية الاسبوع" 
+               onfocus="this.type='date'; try { this.showPicker(); } catch(e) { console.log('Picker error'); }" 
+               onblur="if(!this.value)this.type='text'"
+               onchange="updateDates()"
+               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: 'Cairo', sans-serif; height: 45px; box-sizing: border-box;">
+    </div>
     
     <div class="input-row">
         <input type="number" id="v_count" placeholder="إجمالي الزيارات">
@@ -105,16 +114,14 @@
             </div>
         </div>
         <div class="footer" id="mainFooter">
-    <div class="show-on-web">
-        تم التطوير بواسطة <b>معتز عبدالمتعال</b>
-    </div>
-
-    <div class="show-on-image" style="display: none; font-size: 0.7em; color: #7f8c8d; line-height: 1.4;">
-        This analysis dashboard has been made through <br>
-        <span style="color: #1b5e20; font-weight: bold;">https://moatazabdelmutaal.github.io/Cashi-weekly-reports/</span>
-    </div>
+            <div class="show-on-web">
+                تم التطوير بواسطة <b>معتز عبدالمتعال</b>
+            </div>
+            <div class="show-on-image" style="display: none; font-size: 0.7em; color: #7f8c8d; line-height: 1.4;">
+                This analysis dashboard has been made through <br>
+                <span style="color: #1b5e20; font-weight: bold;">https://moatazabdelmutaal.github.io/Cashi-weekly-reports/</span>
+            </div>
         </div>
-        
     </div>
 </div>
 
@@ -148,27 +155,21 @@ function generateReport() {
 
 async function shareReport() {
     const report = document.getElementById('weeklyReport');
-    
-    // تحديد عناصر الفوتر
     const webFooter = document.querySelector('.show-on-web');
     const imgFooter = document.querySelector('.show-on-image');
 
-    // 1. تبديل المحتوى قبل اللقطة
     webFooter.style.display = 'none';
     imgFooter.style.display = 'block';
 
-    // 2. تصوير التقرير بجودة عالية
     const canvas = await html2canvas(report, { 
         scale: 3, 
         useCORS: true,
-        backgroundColor: "#ffffff" // لضمان خلفية بيضاء نقية في الصورة
+        backgroundColor: "#ffffff"
     });
 
-    // 3. إعادة المحتوى لأصله فوراً في الموقع
     webFooter.style.display = 'block';
     imgFooter.style.display = 'none';
 
-    // 4. تنفيذ عملية المشاركة الرسمية
     canvas.toBlob(async (blob) => {
         const file = new File([blob], 'Cashi-Weekly-Report.png', { type: 'image/png' });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -177,17 +178,15 @@ async function shareReport() {
                     files: [file],
                     title: 'تقرير أداء كاشي - معتز',
                 });
-            } catch (err) { console.log("User cancelled or error: ", err); }
+            } catch (err) { console.log("Share error: ", err); }
         } else {
-            // تحميل يدوي في حال عدم دعم المشاركة
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = 'Weekly-Report.png';
+            link.download = 'Cashi-Report.png';
             link.click();
         }
     }, 'image/png');
 }
-
 </script>
 </body>
 </html>
