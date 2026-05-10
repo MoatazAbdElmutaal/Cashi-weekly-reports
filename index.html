@@ -144,7 +144,7 @@ function updateDates() {
     if (startInput) {
         const start = new Date(startInput);
         const end = new Date(startInput);
-        end.setDate(start.getDate() + 7);
+        end.setDate(start.getDate() + 6);
         const options = { month: 'short', day: 'numeric', year: 'numeric' };
         document.getElementById('periodText').innerText = `من ${start.toLocaleDateString('ar-EG', options)} إلى ${end.toLocaleDateString('ar-EG', options)}`;
     }
