@@ -175,10 +175,19 @@ async function shareReport() {
     const report = document.getElementById('weeklyReport');
     const webFooter = document.querySelector('.show-on-web');
     const imgFooter = document.querySelector('.show-on-image');
+
     webFooter.style.display = 'none';
     imgFooter.style.display = 'block';
 
-    const canvas = await html2canvas(report, { scale: 3, useCORS: true, backgroundColor: "#ffffff" });
+    // التعديل هنا: رفع الـ scale لـ 5 وتحسين معالجة الصور
+    const canvas = await html2canvas(report, { 
+        scale: 5, // جودة فائقة (Super HD)
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+        imageTimeout: 0,
+        scale: window.devicePixelRatio * 2 // يضاعف كثافة البكسلات حسب شاشة جوالك
+    });
 
     webFooter.style.display = 'block';
     imgFooter.style.display = 'none';
@@ -186,15 +195,21 @@ async function shareReport() {
     canvas.toBlob(async (blob) => {
         const file = new File([blob], 'Cashi-Weekly-Report.png', { type: 'image/png' });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: 'تقرير أداء كاشي - معتز' });
+            try {
+                await navigator.share({
+                    files: [file],
+                    title: 'تقرير أداء كاشي - معتز',
+                });
+            } catch (err) { console.log("Share error"); }
         } else {
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = 'Cashi-Report.png';
             link.click();
         }
-    }, 'image/png');
+    }, 'image/png', 1.0); // 1.0 تعني أعلى جودة ممكنة للـ Blob
 }
+
 </script>
 </body>
 </html>
